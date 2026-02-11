@@ -103,7 +103,8 @@ class MainActivity : AppCompatActivity() {
             override fun OnMarkerClicked(marker: Marker?) {
                 val title = marker?.title ?: return
                 runOnUiThread {
-                    showJobDetails(title)
+                    val job = allJobs.find { it.title == title } ?: return@runOnUiThread
+                    focusOnJob(job)
                 }
             }
         })
@@ -112,7 +113,8 @@ class MainActivity : AppCompatActivity() {
             override fun OnLabelClicked(label: Label?) {
                 val text = label?.text ?: return
                 runOnUiThread {
-                    showJobDetails(text)
+                    val job = allJobs.find { it.title == text } ?: return@runOnUiThread
+                    focusOnJob(job)
                 }
             }
         })
@@ -122,17 +124,17 @@ class MainActivity : AppCompatActivity() {
         val job = allJobs.find { it.title == title } ?: return
 
         val message = buildString {
-            append("عنوان شغل: ")
+            append(getString(R.string.job_title_label))
             append(job.title)
             append("\n")
-            append("دسته‌بندی: ")
+            append(getString(R.string.job_category_label))
             append(job.category)
         }
 
         AlertDialog.Builder(this)
-            .setTitle("جزئیات درخواست")
+            .setTitle(getString(R.string.job_details_title))
             .setMessage(message)
-            .setPositiveButton("باشه", null)
+            .setPositiveButton(getString(R.string.ok), null)
             .show()
     }
 
@@ -161,6 +163,10 @@ class MainActivity : AppCompatActivity() {
                 jobs = jobsState,
                 categories = categoriesState,
                 isShowingResults = isShowingResults,
+                onRadiusChange = { newRadius ->
+                    radiusKm = newRadius.toFloat()
+                    drawUserAreaCircle()
+                },
                 onSearch = { radius ->
                     radiusKm = radius.toFloat()
                     drawUserAreaCircle()
