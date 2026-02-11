@@ -1,3 +1,14 @@
 <resources>
     <string name="app_name">Test App</string>
+
+    <!-- Main screen -->
+    <string name="search_radius_label">شعاع جستجو (کیلومتر)</string>
+    <string name="search_button">جستجو</string>
+    <string name="filter_all">همه</string>
+
+    <!-- Job details dialog -->
+    <string name="job_title_label">عنوان شغل: </string>
+    <string name="job_category_label">دسته‌بندی: </string>
+    <string name="job_details_title">جزئیات درخواست</string>
+    <string name="ok">باشه</string>
 </resources>
