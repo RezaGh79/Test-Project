@@ -17,15 +17,6 @@
 
 
         <activity
-            android:name=".JourneyScheduleActivity"
-            android:exported="true"
-            android:theme="@style/Theme.AppCompat">
-
-
-        </activity>
-
-
-        <activity
             android:name=".MainActivity"
             android:exported="true"
             android:theme="@style/Theme.MaterialComponents.Light.NoActionBar">
