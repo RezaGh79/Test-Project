@@ -1,4 +1,4 @@
-package com.reza.sampleproject.presentation.main
+package com.reza.sampleproject.presentation.main.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -26,6 +26,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.reza.sampleproject.domain.model.Job
+import com.reza.sampleproject.presentation.main.MainUiState
+import com.reza.sampleproject.presentation.main.MainViewModel
 
 @Composable
 fun MainScreen(

@@ -1,4 +1,4 @@
-package com.reza.sampleproject.presentation.main
+package com.reza.sampleproject.presentation.main.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxWidth

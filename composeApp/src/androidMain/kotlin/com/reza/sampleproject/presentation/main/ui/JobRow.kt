@@ -1,4 +1,4 @@
-package com.reza.sampleproject.presentation.main
+package com.reza.sampleproject.presentation.main.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
