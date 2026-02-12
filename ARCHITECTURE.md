@@ -99,9 +99,7 @@ Dependencies always point **inward**:
 
 ---
 
-## Composition and Wiring Policies
+## Dependency Injection (Koin)
 
-**Where to wire layers together**
-
-- All these dependencies should be wired in the **presentation layer** (e.g., in activities or a dependency injection setup).
-
+This project uses Koin dependency injection to assemble the object graph. The DI setup is defined in
+the `di` package, where modules are created for each layer:
