@@ -2,10 +2,10 @@ package com.reza.sampleproject.presentation.main
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.reza.sampleproject.domain.model.Job
 import com.reza.sampleproject.domain.usecase.FilterJobsByCategoryUseCase
 import com.reza.sampleproject.domain.usecase.GetJobCategoriesUseCase
 import com.reza.sampleproject.domain.usecase.SearchJobsUseCase
-import com.reza.sampleproject.domain.model.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -35,8 +35,6 @@ class MainViewModel(
         currentRadiusKm = radiusKm.toFloat()
         
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true)
-            
             try {
                 val jobs = searchJobsUseCase(center, radiusKm.toFloat())
                 allJobs = jobs
@@ -47,12 +45,10 @@ class MainViewModel(
                     filteredJobs = jobs,
                     categories = categories,
                     isShowingResults = true,
-                    isLoading = false,
                     radiusKm = radiusKm
                 )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
-                    isLoading = false,
                     error = e.message
                 )
             }
@@ -68,20 +64,7 @@ class MainViewModel(
         )
     }
 
-    fun resetSearch() {
-        _uiState.value = _uiState.value.copy(
-            isShowingResults = false,
-            filteredJobs = emptyList(),
-            allJobs = emptyList(),
-            categories = emptyList(),
-            selectedCategory = null
-        )
-        allJobs = emptyList()
-    }
-
     fun getCurrentRadiusKm(): Float = currentRadiusKm
-
-    fun getCurrentCenter(): LatLng? = currentCenter
 }
 
 data class MainUiState(
@@ -89,7 +72,6 @@ data class MainUiState(
     val filteredJobs: List<Job> = emptyList(),
     val categories: List<String> = emptyList(),
     val isShowingResults: Boolean = false,
-    val isLoading: Boolean = false,
     val error: String? = null,
     val radiusKm: Int = 5,
     val selectedCategory: String? = null
