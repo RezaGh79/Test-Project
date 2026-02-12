@@ -35,18 +35,7 @@ kotlin {
             implementation(libs.play.services.location)
             implementation(libs.androidx.constraintlayout.v220)
 
-            // Navigation
-            implementation(libs.androidx.navigation.compose)
-
-            // Metrrial
-            implementation(libs.material.v190)  // Adjust the version as needed
-
-
-            //Play Services
-            implementation(libs.play.services.gcm)
-
-
-            // material icons
+            implementation(libs.material.v190)
             implementation(libs.androidx.material.icons.extended)
             implementation(libs.koin.android)
         }
@@ -59,19 +48,6 @@ kotlin {
             implementation(compose.components.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime.compose)
-            implementation(libs.ktor.client.core)
-            implementation(libs.ktor.client.json)
-            implementation(libs.ktor.client.serialization)
-
-
-            // Serilize
-            implementation(libs.ktor.client.content.negotiation) // Use the latest version
-            implementation(libs.ktor.serialization.kotlinx.json) // Serializer for JSON
-            implementation(libs.kotlinx.serialization.json) // Adjust to the latest version
-
-            // LiveData
-            implementation(libs.androidx.runtime.livedata)
-
         }
     }
 }
