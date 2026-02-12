@@ -2,7 +2,6 @@ package com.reza.sampleproject
 
 import android.os.Bundle
 import android.view.View
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.ui.platform.ComposeView
 import androidx.lifecycle.lifecycleScope
@@ -10,6 +9,7 @@ import com.reza.sampleproject.domain.model.Job
 import com.reza.sampleproject.domain.usecase.GetUserLastLocationUseCase
 import com.reza.sampleproject.presentation.main.MainCoordinator
 import com.reza.sampleproject.presentation.main.MainViewModel
+import com.reza.sampleproject.presentation.main.ui.JobDetailsDialog
 import com.reza.sampleproject.presentation.main.ui.MainScreen
 import com.reza.sampleproject.presentation.map.MapJobRenderer
 import kotlinx.coroutines.launch
@@ -27,6 +27,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var composeView: ComposeView
     private val viewModel: MainViewModel by viewModel()
     private val getUserLastLocationUseCase: GetUserLastLocationUseCase by inject()
+    private val jobDetailsDialog by lazy { JobDetailsDialog(this) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,19 +58,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showJobDetails(job: Job) {
-        val message = buildString {
-            append(getString(R.string.job_title_label))
-            append(job.title)
-            append("\n")
-            append(getString(R.string.job_category_label))
-            append(job.category)
-        }
-
-        AlertDialog.Builder(this)
-            .setTitle(getString(R.string.job_details_title))
-            .setMessage(message)
-            .setPositiveButton(getString(R.string.ok), null)
-            .show()
+        jobDetailsDialog.show(job)
     }
 
     private fun focusOnJob(job: Job) {
@@ -92,8 +81,9 @@ class MainActivity : AppCompatActivity() {
                     focusOnUserLocation(null)
                 },
                 onSearchClick = { radius ->
-                    val center = coordinator.getUserLocation()?.let { LatLng(it.latitude, it.longitude) }
-                        ?: LatLng(DEFAULT_LAT, DEFAULT_LON)
+                    val center =
+                        coordinator.getUserLocation()?.let { LatLng(it.latitude, it.longitude) }
+                            ?: LatLng(DEFAULT_LAT, DEFAULT_LON)
                     viewModel.searchJobs(center, radius)
                 },
                 onStateChange = { state ->

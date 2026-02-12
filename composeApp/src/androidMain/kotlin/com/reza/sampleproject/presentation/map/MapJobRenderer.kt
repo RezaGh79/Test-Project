@@ -1,13 +1,14 @@
 package com.reza.sampleproject.presentation.map
 
 import android.content.Context
-import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
 import android.location.Location
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.createBitmap
+import com.carto.graphics.Bitmap
 import com.carto.graphics.Color
 import com.carto.styles.LineStyleBuilder
 import com.carto.styles.MarkerStyle
@@ -30,6 +31,8 @@ class MapJobRenderer(
 
     private val currentMarkers = ArrayList<Marker>()
     private val currentLabels = ArrayList<Label>()
+    private val markerJobMap = mutableMapOf<Marker, Job>()
+    private val labelJobMap = mutableMapOf<Label, Job>()
     private var areaCircle: Circle? = null
     private var userMarker: Marker? = null
 
@@ -45,10 +48,10 @@ class MapJobRenderer(
         val center = LatLng(location.latitude, location.longitude)
         val radiusMeters = (radiusKm * 1000f).toDouble()
 
-        val fillColor = Color(0x55228BE6.toInt())
+        val fillColor = Color(0x55228BE6)
         val outlineBuilder = LineStyleBuilder().apply {
-            setColor(Color(0xFFFFFFFF.toInt()))
-            setWidth(3f)
+            color = Color(0xFFFFFFFF.toInt())
+            width = 3f
         }
 
         val circle = Circle(center, radiusMeters, fillColor, outlineBuilder.buildStyle())
@@ -87,10 +90,12 @@ class MapJobRenderer(
             }
             map.addMarker(marker)
             currentMarkers.add(marker)
+            markerJobMap[marker] = job
 
             val label = Label(job.latLng, textStyle, job.title)
             map.addLabel(label)
             currentLabels.add(label)
+            labelJobMap[label] = job
         }
     }
 
@@ -99,11 +104,23 @@ class MapJobRenderer(
             map.removeMarker(marker)
         }
         currentMarkers.clear()
+        markerJobMap.clear()
 
         for (label in currentLabels) {
             map.removeLabel(label)
         }
         currentLabels.clear()
+        labelJobMap.clear()
+    }
+
+    fun getJobForMarker(marker: Marker?): Job? {
+        if (marker == null) return null
+        return markerJobMap[marker]
+    }
+
+    fun getJobForLabel(label: Label?): Job? {
+        if (label == null) return null
+        return labelJobMap[label]
     }
 
     private fun createMarkerStyle(): MarkerStyle {
@@ -130,13 +147,9 @@ class MapJobRenderer(
         return textStyleBuilder.buildStyle()
     }
 
-    fun getBitmapFromVectorDrawable(drawableId: Int, tintColor: Int? = null): com.carto.graphics.Bitmap? {
+    fun getBitmapFromVectorDrawable(drawableId: Int, tintColor: Int? = null): Bitmap? {
         val drawable = ContextCompat.getDrawable(context, drawableId) ?: return null
-        val bitmap = Bitmap.createBitmap(
-            drawable.intrinsicWidth,
-            drawable.intrinsicHeight,
-            Bitmap.Config.ARGB_8888
-        )
+        val bitmap = createBitmap(drawable.intrinsicWidth, drawable.intrinsicHeight)
         val canvas = Canvas(bitmap)
         if (tintColor != null) {
             drawable.colorFilter = PorterDuffColorFilter(tintColor, PorterDuff.Mode.SRC_IN)
