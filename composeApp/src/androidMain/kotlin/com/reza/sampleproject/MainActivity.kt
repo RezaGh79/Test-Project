@@ -9,17 +9,15 @@ import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.ComposeView
 import androidx.core.content.ContextCompat
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.reza.sampleproject.domain.model.Job
-import com.reza.sampleproject.domain.usecase.JobsGenerator
 import com.reza.sampleproject.presentation.main.MainScreen
+import com.reza.sampleproject.presentation.main.MainViewModel
 import com.reza.sampleproject.presentation.map.MapJobRenderer
+import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.neshan.common.model.LatLng
 import org.neshan.mapsdk.MapView
 import org.neshan.mapsdk.model.Label
@@ -34,14 +32,9 @@ class MainActivity : AppCompatActivity() {
 
     private var userLocation: Location? = null
     private lateinit var fusedLocationClient: FusedLocationProviderClient
-    private var radiusKm: Float = 5f
 
     private lateinit var composeView: ComposeView
-    private val allJobs = ArrayList<Job>()
-    private val jobsGenerator = JobsGenerator()
-    private var jobsState by mutableStateOf<List<Job>>(emptyList())
-    private var categoriesState by mutableStateOf<List<String>>(emptyList())
-    private var isShowingResults by mutableStateOf(false)
+    private val viewModel: MainViewModel by viewModel()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -103,7 +96,8 @@ class MainActivity : AppCompatActivity() {
             override fun OnMarkerClicked(marker: Marker?) {
                 val title = marker?.title ?: return
                 runOnUiThread {
-                    val job = allJobs.find { it.title == title } ?: return@runOnUiThread
+                    val job = viewModel.uiState.value.allJobs.find { it.title == title } 
+                        ?: return@runOnUiThread
                     focusOnJob(job)
                 }
             }
@@ -113,7 +107,8 @@ class MainActivity : AppCompatActivity() {
             override fun OnLabelClicked(label: Label?) {
                 val text = label?.text ?: return
                 runOnUiThread {
-                    val job = allJobs.find { it.title == text } ?: return@runOnUiThread
+                    val job = viewModel.uiState.value.allJobs.find { it.title == text } 
+                        ?: return@runOnUiThread
                     focusOnJob(job)
                 }
             }
@@ -121,7 +116,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showJobDetails(title: String) {
-        val job = allJobs.find { it.title == title } ?: return
+        val job = viewModel.uiState.value.allJobs.find { it.title == title } ?: return
 
         val message = buildString {
             append(getString(R.string.job_title_label))
@@ -138,16 +133,6 @@ class MainActivity : AppCompatActivity() {
             .show()
     }
 
-    private fun generateJobs() {
-        allJobs.clear()
-
-        val center = userLocation?.let { LatLng(it.latitude, it.longitude) }
-            ?: LatLng(35.767234, 51.330743)
-
-        val jobs = jobsGenerator.generate(center, radiusKm)
-        allJobs.addAll(jobs)
-    }
-
     private fun focusOnJob(job: Job) {
         mapRenderer.moveCameraTo(job.latLng, 16f, 0.5f)
         showJobDetails(job.title)
@@ -160,37 +145,23 @@ class MainActivity : AppCompatActivity() {
     private fun initCompose() {
         composeView.setContent {
             MainScreen(
-                jobs = jobsState,
-                categories = categoriesState,
-                isShowingResults = isShowingResults,
-                onRadiusChange = { newRadius ->
-                    radiusKm = newRadius.toFloat()
-                    drawUserAreaCircle()
-                },
-                onSearch = { radius ->
-                    radiusKm = radius.toFloat()
-                    drawUserAreaCircle()
-                    generateJobs()
-                    categoriesState = allJobs.map { it.category }.distinct()
-                    jobsState = allJobs.toList()
-                    isShowingResults = true
-                    updateMapMarkers(allJobs)
-                },
-                onFilterSelected = { category ->
-                    if (category == null) {
-                        jobsState = allJobs.toList()
-                        updateMapMarkers(allJobs)
-                    } else {
-                        val filtered = allJobs.filter { it.category == category }
-                        jobsState = filtered
-                        updateMapMarkers(filtered)
-                    }
-                },
+                viewModel = viewModel,
                 onJobClick = { job ->
                     focusOnJob(job)
                 },
                 onCurrentLocationClick = {
                     focusOnUserLocation(null)
+                },
+                onSearchClick = { radius ->
+                    val center = userLocation?.let { LatLng(it.latitude, it.longitude) }
+                        ?: LatLng(35.767234, 51.330743)
+                    viewModel.searchJobs(center, radius)
+                },
+                onStateChange = { state ->
+                    updateMapMarkers(state.filteredJobs)
+                    if (userLocation != null) {
+                        drawUserAreaCircle()
+                    }
                 }
             )
         }
@@ -250,6 +221,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun drawUserAreaCircle() {
         val location = userLocation ?: return
+        val radiusKm = viewModel.getCurrentRadiusKm()
         mapRenderer.drawUserArea(location, radiusKm)
     }
 }

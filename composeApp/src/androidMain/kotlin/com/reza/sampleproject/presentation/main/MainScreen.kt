@@ -10,15 +10,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MyLocation
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -29,17 +29,22 @@ import com.reza.sampleproject.domain.model.Job
 
 @Composable
 fun MainScreen(
-    jobs: List<Job>,
-    categories: List<String>,
-    isShowingResults: Boolean,
-    onSearch: (Int) -> Unit,
-    onRadiusChange: (Int) -> Unit,
-    onFilterSelected: (String?) -> Unit,
+    viewModel: MainViewModel,
     onJobClick: (Job) -> Unit,
-    onCurrentLocationClick: () -> Unit
+    onCurrentLocationClick: () -> Unit,
+    onSearchClick: (Int) -> Unit,
+    onStateChange: (MainUiState) -> Unit = {}
 ) {
-    var radius by remember { mutableStateOf(5) }
-    var selectedCategory by remember { mutableStateOf<String?>(null) }
+    val uiState by viewModel.uiState.collectAsState()
+    var radius by remember { mutableIntStateOf(uiState.radiusKm) }
+
+    LaunchedEffect(uiState.radiusKm) {
+        radius = uiState.radiusKm
+    }
+
+    LaunchedEffect(uiState) {
+        onStateChange(uiState)
+    }
 
     Box(
         modifier = Modifier
@@ -83,32 +88,30 @@ fun MainScreen(
                         .fillMaxWidth()
                         .padding(16.dp)
                 ) {
-                    if (!isShowingResults) {
+                    if (!uiState.isShowingResults) {
                         SearchRadiusSection(
                             radius = radius,
                             onRadiusChange = {
                                 radius = it
-                                onRadiusChange(it)
+                                viewModel.updateRadius(it)
                             },
-                            onSearchClick = { onSearch(radius) }
+                            onSearchClick = { onSearchClick(radius) }
                         )
                     } else {
                         CategoryFilterRow(
-                            categories = categories,
-                            selectedCategory = selectedCategory,
+                            categories = uiState.categories,
+                            selectedCategory = uiState.selectedCategory,
                             onCategorySelected = { category ->
-                                selectedCategory = category
-                                onFilterSelected(category)
+                                viewModel.filterByCategory(category)
                             }
                         )
                         JobsList(
-                            jobs = jobs,
+                            jobs = uiState.filteredJobs,
                             onJobClick = onJobClick
                         )
                     }
                 }
             }
         }
-
     }
 }
