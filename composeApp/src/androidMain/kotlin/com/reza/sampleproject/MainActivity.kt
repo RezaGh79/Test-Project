@@ -1,7 +1,6 @@
 package com.reza.sampleproject
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Build
@@ -11,12 +10,14 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.ui.platform.ComposeView
 import androidx.core.content.ContextCompat
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationServices
+import androidx.lifecycle.lifecycleScope
 import com.reza.sampleproject.domain.model.Job
+import com.reza.sampleproject.domain.usecase.GetUserLastLocationUseCase
 import com.reza.sampleproject.presentation.main.MainScreen
 import com.reza.sampleproject.presentation.main.MainViewModel
 import com.reza.sampleproject.presentation.map.MapJobRenderer
+import kotlinx.coroutines.launch
+import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.neshan.common.model.LatLng
 import org.neshan.mapsdk.MapView
@@ -31,10 +32,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var mapRenderer: MapJobRenderer
 
     private var userLocation: Location? = null
-    private lateinit var fusedLocationClient: FusedLocationProviderClient
 
     private lateinit var composeView: ComposeView
     private val viewModel: MainViewModel by viewModel()
+    private val getUserLastLocationUseCase: GetUserLastLocationUseCase by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,39 +44,8 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-
         initLayoutReference()
-        initLocation()
-
     }
-
-    fun initLocation() {
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-    }
-
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-
-        if (requestCode == this.requestCode) {
-            if (ContextCompat.checkSelfPermission(
-                    this@MainActivity,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                ) == PackageManager.PERMISSION_GRANTED
-                && ContextCompat.checkSelfPermission(
-                    this@MainActivity,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                ) == PackageManager.PERMISSION_GRANTED
-            ) {
-                requestUserLastLocation()
-            }
-        }
-    }
-
 
     private fun initLayoutReference() {
         initViews()
@@ -96,7 +66,7 @@ class MainActivity : AppCompatActivity() {
             override fun OnMarkerClicked(marker: Marker?) {
                 val title = marker?.title ?: return
                 runOnUiThread {
-                    val job = viewModel.uiState.value.allJobs.find { it.title == title } 
+                    val job = viewModel.uiState.value.allJobs.find { it.title == title }
                         ?: return@runOnUiThread
                     focusOnJob(job)
                 }
@@ -107,7 +77,7 @@ class MainActivity : AppCompatActivity() {
             override fun OnLabelClicked(label: Label?) {
                 val text = label?.text ?: return
                 runOnUiThread {
-                    val job = viewModel.uiState.value.allJobs.find { it.title == text } 
+                    val job = viewModel.uiState.value.allJobs.find { it.title == text }
                         ?: return@runOnUiThread
                     focusOnJob(job)
                 }
@@ -168,7 +138,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun focusOnUserLocation(view: View?) {
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (ContextCompat.checkSelfPermission(
                     this@MainActivity,
@@ -187,24 +156,19 @@ class MainActivity : AppCompatActivity() {
                     ), requestCode
                 )
             }
-
         } else {
             requestUserLastLocation()
         }
-
     }
 
-
-    @SuppressLint("MissingPermission")
     private fun requestUserLastLocation() {
-
-        fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
+        lifecycleScope.launch {
+            val location = getUserLastLocationUseCase()
             if (location != null) {
-                this.userLocation = location
+                userLocation = location
                 onLocationChange()
             }
         }
-
     }
 
     private fun onLocationChange() {
@@ -225,3 +189,4 @@ class MainActivity : AppCompatActivity() {
         mapRenderer.drawUserArea(location, radiusKm)
     }
 }
+
