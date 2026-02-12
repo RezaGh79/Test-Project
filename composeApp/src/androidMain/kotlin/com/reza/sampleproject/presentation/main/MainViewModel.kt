@@ -9,6 +9,7 @@ import com.reza.sampleproject.domain.usecase.SearchJobsUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.neshan.common.model.LatLng
 
@@ -27,7 +28,7 @@ class MainViewModel(
 
     fun updateRadius(radiusKm: Int) {
         currentRadiusKm = radiusKm.toFloat()
-        _uiState.value = _uiState.value.copy(radiusKm = radiusKm)
+        _uiState.update { it.copy(radiusKm = radiusKm) }
     }
 
     fun searchJobs(center: LatLng, radiusKm: Int) {
@@ -39,29 +40,32 @@ class MainViewModel(
                 val jobs = searchJobsUseCase(center, radiusKm.toFloat())
                 allJobs = jobs
                 val categories = getJobCategoriesUseCase(jobs)
-                
-                _uiState.value = _uiState.value.copy(
-                    allJobs = jobs,
-                    filteredJobs = jobs,
-                    categories = categories,
-                    isShowingResults = true,
-                    radiusKm = radiusKm
-                )
+
+                _uiState.update {
+                    it.copy(
+                        allJobs = jobs,
+                        filteredJobs = jobs,
+                        categories = categories,
+                        isShowingResults = true,
+                        radiusKm = radiusKm,
+                        error = null
+                    )
+                }
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    error = e.message
-                )
+                _uiState.update { it.copy(error = e.message) }
             }
         }
     }
 
     fun filterByCategory(category: String?) {
         val filteredJobs = filterJobsByCategoryUseCase(allJobs, category)
-        
-        _uiState.value = _uiState.value.copy(
-            filteredJobs = filteredJobs,
-            selectedCategory = category
-        )
+
+        _uiState.update {
+            it.copy(
+                filteredJobs = filteredJobs,
+                selectedCategory = category
+            )
+        }
     }
 
     fun getCurrentRadiusKm(): Float = currentRadiusKm
