@@ -1,4 +1,4 @@
-package com.reza.sampleproject.domain.usecase
+package com.reza.sampleproject.data.fake
 
 import com.reza.sampleproject.domain.model.Job
 import org.neshan.common.model.LatLng
@@ -7,7 +7,6 @@ import kotlin.math.PI
 import kotlin.math.cos
 
 class JobsGenerator {
-
     fun generate(center: LatLng, radiusKm: Float, count: Int = 20): List<Job> {
         val jobsByCategory: Map<String, List<String>> = mapOf(
             "خدمات خانگی" to listOf(
